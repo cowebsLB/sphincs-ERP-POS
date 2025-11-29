@@ -62,8 +62,6 @@ class Settings:
             'check_interval_hours': '24',
             'auto_download': 'false',
             'auto_install': 'false',
-            'github_repo_owner': 'cowebsLB',
-            'github_repo_name': 'sphincs-ERP-POS',
             'update_channel': 'stable',  # stable, beta, alpha
         }
         

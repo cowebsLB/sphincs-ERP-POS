@@ -255,12 +255,9 @@ class SplashScreen(QSplashScreen):
             logger.info("Update check on startup is disabled")
             return
         
-        repo_owner = settings.get('Updates', 'github_repo_owner', '')
-        repo_name = settings.get('Updates', 'github_repo_name', '')
-        
-        if not repo_owner or not repo_name:
-            logger.warning("GitHub repository not configured for update checking")
-            return
+        # GitHub repository is hardcoded in the application
+        repo_owner = 'cowebsLB'
+        repo_name = 'sphincs-ERP-POS'
         
         # Start update check in background thread
         self.update_check_thread = UpdateCheckThread(
