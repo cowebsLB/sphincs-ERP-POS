@@ -50,7 +50,8 @@ desktop.ini
 # PyInstaller
 *.spec.bak
 *.manifest
-*.spec
+# Allow .spec files (they're needed for building)
+# *.spec
 
 # Configuration (keep template, ignore actual config with sensitive data)
 config.ini
