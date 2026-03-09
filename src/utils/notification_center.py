@@ -4,7 +4,7 @@ NotificationCenter - central event bus for ERP alerts
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 from PyQt6.QtCore import QObject, pyqtSignal, QMutex, QMutexLocker
@@ -12,6 +12,11 @@ from loguru import logger
 
 from src.database.connection import get_db_session
 from src.database.models import Notification
+
+
+def _utc_now_naive() -> datetime:
+    """Return current UTC timestamp as naive datetime."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class NotificationCenter(QObject):
@@ -95,7 +100,7 @@ class NotificationCenter(QObject):
                 source_id=source_id,
                 payload=payload,
                 notified_user_id=notified_user_id,
-                triggered_at=datetime.utcnow(),
+                triggered_at=_utc_now_naive(),
             )
             session.add(notification)
             session.commit()
@@ -158,7 +163,7 @@ class NotificationCenter(QObject):
                 return True
             
             record.is_read = True
-            record.read_at = datetime.utcnow()
+            record.read_at = _utc_now_naive()
             session.commit()
             data = self._serialize(record)
             self.notification_updated.emit(data)
@@ -179,7 +184,7 @@ class NotificationCenter(QObject):
                 .update(
                     {
                         Notification.is_read: True,
-                        Notification.read_at: datetime.utcnow(),
+                        Notification.read_at: _utc_now_naive(),
                     }
                 )
             )
@@ -211,7 +216,7 @@ class NotificationCenter(QObject):
                 .update(
                     {
                         Notification.is_read: True,
-                        Notification.read_at: datetime.utcnow(),
+                        Notification.read_at: _utc_now_naive(),
                     }
                 )
             )
@@ -250,5 +255,6 @@ class NotificationCenter(QObject):
             "triggered_at": notification.triggered_at.isoformat() if notification.triggered_at else None,
             "notified_user_id": notification.notified_user_id,
         }
+
 
 

@@ -2,7 +2,7 @@
 Notification Preferences tab for settings
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
@@ -25,6 +25,11 @@ from src.utils.notification_preferences import (
     set_channel_settings,
     snooze_channels,
 )
+
+
+def _utc_now_naive() -> datetime:
+    """Return current UTC timestamp as naive datetime."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class NotificationPreferencesWidget(QWidget):
@@ -158,7 +163,7 @@ class NotificationPreferencesWidget(QWidget):
             if severity_index >= 0:
                 controls["severity"].setCurrentIndex(severity_index)
             snooze_label = "—"
-            if pref.snoozed_until and pref.snoozed_until > datetime.utcnow():
+            if pref.snoozed_until and pref.snoozed_until > _utc_now_naive():
                 snooze_label = pref.snoozed_until.strftime("%b %d %H:%M")
                 controls["clear_btn"].setEnabled(True)
             else:

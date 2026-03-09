@@ -5,7 +5,7 @@ Integrations Management View - Online ordering and accounting software
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QTabWidget, QLineEdit, QFormLayout, QGroupBox, QMessageBox,
-    QComboBox, QPushButton, QTextEdit
+    QComboBox, QTextEdit
 )
 from loguru import logger
 from src.utils.online_ordering import get_ordering_integration, OrderingPlatform

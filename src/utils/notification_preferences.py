@@ -5,13 +5,18 @@ Notification preferences helpers
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
 from loguru import logger
 
 from src.database.connection import get_db_session
 from src.database.models import NotificationPreference
+
+
+def _utc_now_naive() -> datetime:
+    """Return current UTC timestamp as naive datetime."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 DEFAULT_CHANNELS = [
     ("Inventory", "Inventory & expiry alerts"),
@@ -159,7 +164,7 @@ def snooze_channels(staff_id: int, minutes: int, channels: Optional[List[str]] =
         )
         if channels:
             query = query.filter(NotificationPreference.channel.in_(channels))
-        until = datetime.utcnow() + timedelta(minutes=minutes)
+        until = _utc_now_naive() + timedelta(minutes=minutes)
         query.update({NotificationPreference.snoozed_until: until}, synchronize_session=False)
         session.commit()
     except Exception as exc:
@@ -200,7 +205,7 @@ def is_channel_allowed(
 ) -> bool:
     if not pref or not pref.is_enabled:
         return False
-    if pref.snoozed_until and pref.snoozed_until > datetime.utcnow():
+    if pref.snoozed_until and pref.snoozed_until > _utc_now_naive():
         return False
     if target == "desktop" and not pref.desktop_enabled:
         return False
@@ -246,4 +251,5 @@ def should_display_notification(
     if not pref:
         return True
     return is_channel_allowed(pref, severity, target=target)
+
 

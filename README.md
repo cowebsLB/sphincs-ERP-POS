@@ -17,6 +17,19 @@ Both applications share the same local SQLite database and sync with a cloud dat
 - **Advanced Operations Hub**: A dedicated module inside the ERP consolidates Reservations, Vendor Contracts, Training, Audits, Maintenance, Delivery, Menu Engineering, Events, and Safety workflows with matching UI styling and shared permissions.
 - **Shared Services**: Authentication, roles/permissions, logging, audit trails, PDF generation, predictive analytics, and integrations are reused across modules (desktop + mobile + API).
 
+## Documentation Index
+
+- [Documentation Hub](docs/INDEX.md)
+- [ERP UI/UX Roadmap](docs/erp/uiux-roadmap.md)
+- [ERP UI/UX Baseline Audit](docs/erp/uiux-audit-baseline.md)
+- [ERP UI/UX Phase 1 Shell Refresh](docs/erp/uiux-phase1-shell-refresh.md)
+- [ERP UI/UX Phase 2 Global Refresh](docs/erp/uiux-phase2-global-refresh.md)
+- [ERP Worklog](docs/erp/worklog.md)
+- [ERP Implementation Summary (2026-03-09)](docs/erp/implementation-summary-2026-03-09.md)
+- [ERP Module Map](docs/erp/module-map.md)
+- [Design Notes](design.md)
+- [Project Plan](plan.md)
+
 ## Features
 
 ### Sphincs ERP

@@ -3,7 +3,7 @@ Background worker thread that periodically scans the database
 for conditions that should trigger notifications.
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from PyQt6.QtCore import QThread
 from loguru import logger
@@ -20,6 +20,11 @@ from src.database.models import (
     SafetyIncident,
 )
 from src.utils.notification_center import NotificationCenter
+
+
+def _utc_now_naive() -> datetime:
+    """Return current UTC timestamp as naive datetime."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class NotificationWorker(QThread):
@@ -231,7 +236,7 @@ class NotificationWorker(QThread):
     # Sales / POS checks
     # ------------------------------------------------------------------
     def check_pending_orders(self):
-        now = datetime.utcnow()
+        now = _utc_now_naive()
         cutoff = now - timedelta(minutes=5)
         session = get_db_session()
         active_ids = set()
@@ -282,5 +287,6 @@ class NotificationWorker(QThread):
         for (source_id,) in stale:
             if source_id not in active_ids:
                 self.center.resolve_for_source(source_type, source_id)
+
 
 

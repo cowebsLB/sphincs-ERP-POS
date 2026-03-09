@@ -3,12 +3,22 @@ Database Models for Sphincs ERP + POS
 SQLAlchemy ORM Models
 """
 
+from datetime import datetime, timezone
+
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Date, Time, Text, ForeignKey, JSON, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-from datetime import datetime
+from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
+
+
+def utc_now_naive() -> datetime:
+    """Return current UTC time as naive datetime for SQLite storage."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def utc_today():
+    """Return current UTC date."""
+    return utc_now_naive().date()
 
 
 class BaseModel(Base):
@@ -16,8 +26,8 @@ class BaseModel(Base):
     __abstract__ = True
     
     version = Column(Integer, default=1, nullable=False)
-    last_modified = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    last_modified = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive, nullable=False)
+    created_at = Column(DateTime, default=utc_now_naive, nullable=False)
     device_id = Column(String(100), nullable=True)
     user_id = Column(Integer, nullable=True)  # FK to staff who created/modified
 
@@ -193,7 +203,7 @@ class Order(BaseModel):
     order_type = Column(String(20), nullable=False)  # dine-in, takeaway, delivery
     table_number = Column(String(20), nullable=True)
     order_status = Column(String(20), default='pending', nullable=False)  # pending, in_kitchen, completed, cancelled
-    order_datetime = Column(DateTime, default=datetime.utcnow, nullable=False)
+    order_datetime = Column(DateTime, default=utc_now_naive, nullable=False)
     total_amount = Column(Float, nullable=False)
     payment_method = Column(String(50), nullable=True)  # cash, card, digital
     
@@ -213,7 +223,7 @@ class OrderItem(BaseModel):
     product_id = Column(Integer, ForeignKey('products.product_id'), nullable=False)
     quantity = Column(Float, nullable=False)
     unit_price = Column(Float, nullable=False)  # Price at time of order
-    total_price = Column(Float, nullable=False)  # quantity × unit_price
+    total_price = Column(Float, nullable=False)  # quantity ?? unit_price
     
     # Relationships
     order = relationship("Order", back_populates="order_items")
@@ -246,7 +256,7 @@ class Payment(BaseModel):
     order_id = Column(Integer, ForeignKey('orders.order_id'), nullable=False)
     amount = Column(Float, nullable=False)
     method = Column(String(20), nullable=False)  # cash, card, digital
-    payment_datetime = Column(DateTime, default=datetime.utcnow, nullable=False)
+    payment_datetime = Column(DateTime, default=utc_now_naive, nullable=False)
     status = Column(String(20), default='paid', nullable=False)  # paid, refunded, pending
     
     # Relationships
@@ -266,7 +276,7 @@ class Waste(BaseModel):
     quantity = Column(Float, nullable=False)
     reason = Column(String(100), nullable=True)  # spoilage, overproduction, damaged
     recorded_by = Column(Integer, ForeignKey('staff.staff_id'), nullable=True)
-    waste_datetime = Column(DateTime, default=datetime.utcnow, nullable=False)
+    waste_datetime = Column(DateTime, default=utc_now_naive, nullable=False)
     
     # Relationships
     ingredient = relationship("Ingredient", back_populates="waste_records")
@@ -374,7 +384,7 @@ class Transaction(BaseModel):
     description = Column(Text, nullable=True)
     reference_type = Column(String(50), nullable=True)  # order, expense, invoice, payment
     reference_id = Column(Integer, nullable=True)  # ID of related record
-    transaction_date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    transaction_date = Column(DateTime, default=utc_now_naive, nullable=False)
     
     # Relationships
     account = relationship("Account", back_populates="transactions")
@@ -575,7 +585,7 @@ class CustomerFeedback(BaseModel):
     rating = Column(Integer, nullable=True)  # 1-5 stars
     feedback_text = Column(Text, nullable=True)
     sentiment = Column(String(20), nullable=True)  # positive, neutral, negative (calculated)
-    feedback_date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    feedback_date = Column(DateTime, default=utc_now_naive, nullable=False)
     is_public = Column(Boolean, default=False, nullable=False)
     
     # Relationships
@@ -600,7 +610,7 @@ class SupplierRating(BaseModel):
     price_rating = Column(Integer, nullable=True)  # 1-5
     communication_rating = Column(Integer, nullable=True)  # 1-5
     notes = Column(Text, nullable=True)
-    rating_date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    rating_date = Column(DateTime, default=utc_now_naive, nullable=False)
     
     # Relationships
     supplier = relationship("Supplier", backref="ratings")
@@ -624,7 +634,7 @@ class AuditLog(BaseModel):
     new_values = Column(JSON, nullable=True)  # New values
     ip_address = Column(String(50), nullable=True)
     user_agent = Column(String(500), nullable=True)
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    timestamp = Column(DateTime, default=utc_now_naive, nullable=False)
     
     # Relationships
     staff = relationship("Staff", backref="audit_logs")
@@ -685,7 +695,7 @@ class Notification(BaseModel):
     payload = Column(JSON, nullable=True)  # extra metadata
     is_read = Column(Boolean, default=False, nullable=False)
     read_at = Column(DateTime, nullable=True)
-    triggered_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    triggered_at = Column(DateTime, default=utc_now_naive, nullable=False)
     notified_user_id = Column(Integer, ForeignKey('staff.staff_id'), nullable=True)
     
     # Relationships
@@ -777,7 +787,7 @@ class TrainingAssignment(BaseModel):
     assignment_id = Column(Integer, primary_key=True, autoincrement=True)
     module_id = Column(Integer, ForeignKey('training_modules.module_id'), nullable=False)
     staff_id = Column(Integer, ForeignKey('staff.staff_id'), nullable=False)
-    assigned_date = Column(Date, default=datetime.utcnow, nullable=False)
+    assigned_date = Column(Date, default=utc_today, nullable=False)
     due_date = Column(Date, nullable=True)
     completion_date = Column(Date, nullable=True)
     score = Column(Float, nullable=True)
@@ -876,7 +886,7 @@ class DeliveryAssignment(BaseModel):
     order_id = Column(Integer, ForeignKey('orders.order_id'), nullable=True)
     driver_id = Column(Integer, ForeignKey('staff.staff_id'), nullable=True)
     vehicle_id = Column(Integer, ForeignKey('delivery_vehicles.vehicle_id'), nullable=True)
-    assigned_time = Column(DateTime, default=datetime.utcnow, nullable=False)
+    assigned_time = Column(DateTime, default=utc_now_naive, nullable=False)
     departure_time = Column(DateTime, nullable=True)
     delivery_time = Column(DateTime, nullable=True)
     route_notes = Column(Text, nullable=True)
@@ -897,7 +907,7 @@ class MenuEngineeringInsight(BaseModel):
     profitability_index = Column(Float, nullable=True)
     menu_class = Column(String(50), nullable=True)  # star, plow horse, puzzle, dog
     recommendation = Column(Text, nullable=True)
-    analysis_date = Column(Date, default=datetime.utcnow, nullable=False)
+    analysis_date = Column(Date, default=utc_today, nullable=False)
     
     product = relationship("Product", backref="menu_insights")
 
@@ -939,7 +949,7 @@ class SafetyIncident(BaseModel):
     __tablename__ = 'safety_incidents'
     
     incident_id = Column(Integer, primary_key=True, autoincrement=True)
-    incident_date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    incident_date = Column(DateTime, default=utc_now_naive, nullable=False)
     location_id = Column(Integer, ForeignKey('locations.location_id'), nullable=True)
     reported_by = Column(Integer, ForeignKey('staff.staff_id'), nullable=True)
     severity = Column(String(20), default='minor', nullable=False)  # minor, moderate, major, critical
@@ -952,3 +962,4 @@ class SafetyIncident(BaseModel):
     
     location = relationship("Location", backref="safety_incidents")
     reporter = relationship("Staff", backref="reported_incidents")
+

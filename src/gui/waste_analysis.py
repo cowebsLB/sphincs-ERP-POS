@@ -258,7 +258,6 @@ class WasteAnalysisView(QWidget):
                     total_cost += waste.quantity * waste.ingredient.cost_per_unit
             
             # Most wasted ingredient
-            from sqlalchemy import func
             top_wasted = db.query(
                 Ingredient.name,
                 func.sum(Waste.quantity).label('total_quantity')

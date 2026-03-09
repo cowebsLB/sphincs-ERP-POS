@@ -134,7 +134,6 @@ def get_top_products(limit: int = 5) -> list:
         
         # Get order items and group by product
         from sqlalchemy import func
-        from src.database.models import OrderItem
         
         top_products = db.query(
             Product.name,

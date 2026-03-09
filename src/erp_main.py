@@ -1,6 +1,15 @@
 """
 Sphincs ERP - Main Entry Point
 Enterprise Resource Planning Application
+
+Documentation:
+- docs/INDEX.md
+- docs/erp/uiux-roadmap.md
+- docs/erp/uiux-audit-baseline.md
+- docs/erp/uiux-phase1-shell-refresh.md
+- docs/erp/uiux-phase2-global-refresh.md
+- docs/erp/implementation-summary-2026-03-09.md
+- docs/erp/worklog.md
 """
 import sys
 from pathlib import Path
@@ -22,6 +31,7 @@ from src.gui.erp_dashboard import ERPDashboard
 from src.database.connection import get_db_manager
 from src import __version__
 from src.gui.table_utils import install_table_auto_resize
+from src.gui.design_system import ERP_APP_BASE_STYLE
 
 
 def main():
@@ -38,6 +48,7 @@ def main():
     app.setApplicationName("Sphincs ERP")
     app.setApplicationVersion(__version__)
     app.setOrganizationName("Sphincs")
+    app.setStyleSheet(ERP_APP_BASE_STYLE)
     install_table_auto_resize(app)
     
     # Set application icon
@@ -111,7 +122,7 @@ def main():
     def show_main_window():
         """Show main window (placeholder for now)"""
         nonlocal main_window
-        
+
         # Close splash screen
         splash.close()
         
@@ -170,4 +181,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

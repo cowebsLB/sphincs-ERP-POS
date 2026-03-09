@@ -5,7 +5,7 @@ Supplier Management Module - Manage suppliers/vendors
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QTableWidget, QTableWidgetItem, QDialog, QLineEdit, QTextEdit,
-    QFormLayout, QMessageBox, QTabWidget
+    QFormLayout, QMessageBox, QTabWidget, QComboBox
 )
 from PyQt6.QtCore import Qt
 from loguru import logger

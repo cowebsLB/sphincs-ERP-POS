@@ -1,5 +1,12 @@
 """
 ERP Dashboard - Main interface for Sphincs ERP
+
+Documentation:
+- docs/INDEX.md
+- docs/erp/module-map.md
+- docs/erp/uiux-audit-baseline.md
+- docs/erp/uiux-phase1-shell-refresh.md
+- docs/erp/worklog.md
 """
 
 from datetime import datetime
@@ -10,10 +17,20 @@ from PyQt6.QtWidgets import (
     QSystemTrayIcon, QMenu
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
-from PyQt6.QtGui import QFont, QColor, QIcon
+from PyQt6.QtGui import QColor, QIcon
 from pathlib import Path
 from loguru import logger
 from typing import Optional
+from src.gui.design_system import (
+    CARD_STYLE,
+    LIST_WIDGET_STYLE,
+    PAGE_SCROLL_STYLE,
+    PRIMARY_BUTTON_STYLE,
+    SECONDARY_BUTTON_STYLE,
+    apply_muted_text,
+    apply_page_title,
+    apply_section_title,
+)
 from src.gui.sidebar import Sidebar
 from src.gui.notification_tray import NotificationTrayManager
 from src.utils.notification_center import NotificationCenter
@@ -38,35 +55,20 @@ class SummaryCard(QFrame):
     def setup_ui(self, title: str, value: str, icon: Optional[str]):
         """Setup card UI"""
         self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setStyleSheet("""
-            QFrame {
-                background-color: white;
-                border: 1px solid #E5E7EB;
-                border-radius: 8px;
-                padding: 20px;
-            }
-        """)
+        self.setStyleSheet(CARD_STYLE)
         
         layout = QVBoxLayout(self)
         layout.setSpacing(8)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(16, 16, 16, 16)
         
         # Title
         title_label = QLabel(title)
-        title_label.setStyleSheet("""
-            color: #6B7280;
-            font-size: 14px;
-            font-weight: 500;
-        """)
+        apply_muted_text(title_label, size=13)
         layout.addWidget(title_label)
         
         # Value
         self.value_label = QLabel(value)
-        self.value_label.setStyleSheet("""
-            color: #111827;
-            font-size: 32px;
-            font-weight: 700;
-        """)
+        self.value_label.setStyleSheet("color: #0F172A; font-size: 28px; font-weight: 700;")
         layout.addWidget(self.value_label)
         
         layout.addStretch()
@@ -83,24 +85,7 @@ class QuickActionButton(QPushButton):
     def __init__(self, text: str, parent=None):
         super().__init__(text, parent)
         self.setMinimumHeight(44)
-        self.setStyleSheet("""
-            QPushButton {
-                background-color: #2563EB;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 10px 20px;
-                font-size: 14px;
-                font-weight: 600;
-                min-height: 44px;
-            }
-            QPushButton:hover {
-                background-color: #3B82F6;
-            }
-            QPushButton:pressed {
-                background-color: #1D4ED8;
-            }
-        """)
+        self.setStyleSheet(PRIMARY_BUTTON_STYLE)
 
 
 class ERPDashboard(QMainWindow):
@@ -163,12 +148,7 @@ class ERPDashboard(QMainWindow):
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        self.scroll_area.setStyleSheet("""
-            QScrollArea {
-                background-color: #0F172A;
-                border: none;
-            }
-        """)
+        self.scroll_area.setStyleSheet(PAGE_SCROLL_STYLE)
         
         # Initial dashboard content
         self.show_dashboard_view()
@@ -312,22 +292,15 @@ class ERPDashboard(QMainWindow):
         """Create welcome section"""
         widget = QWidget()
         layout = QVBoxLayout(widget)
-        layout.setSpacing(8)
+        layout.setSpacing(6)
         layout.setContentsMargins(0, 0, 0, 0)
         
         welcome_label = QLabel(f"Welcome back, {self.username}!")
-        welcome_label.setStyleSheet("""
-            color: #111827;
-            font-size: 28px;
-            font-weight: 700;
-        """)
+        apply_page_title(welcome_label)
         layout.addWidget(welcome_label)
         
-        date_label = QLabel(self.get_current_date())
-        date_label.setStyleSheet("""
-            color: #6B7280;
-            font-size: 14px;
-        """)
+        date_label = QLabel(f"{self.get_current_date()}  |  Role: {self.role}")
+        apply_muted_text(date_label, size=13)
         layout.addWidget(date_label)
         
         return widget
@@ -341,11 +314,7 @@ class ERPDashboard(QMainWindow):
         
         # Section title
         title = QLabel("Today's Summary")
-        title.setStyleSheet("""
-            color: #111827;
-            font-size: 20px;
-            font-weight: 700;
-        """)
+        apply_section_title(title)
         layout.addWidget(title)
         
         # Summary cards grid
@@ -353,10 +322,10 @@ class ERPDashboard(QMainWindow):
         cards_layout.setSpacing(16)
         
         self.summary_cards = {
-            'sales': SummaryCard("Sales", "$0.00"),
-            'orders': SummaryCard("Orders", "0"),
-            'staff': SummaryCard("Staff", "0/0"),
-            'alerts': SummaryCard("Alerts", "0")
+            'sales': SummaryCard("Sales Today", "$0.00"),
+            'orders': SummaryCard("Orders Today", "0"),
+            'staff': SummaryCard("Staff Active", "0/0"),
+            'alerts': SummaryCard("Open Alerts", "0")
         }
         
         cards_layout.addWidget(self.summary_cards['sales'], 0, 0)
@@ -372,21 +341,17 @@ class ERPDashboard(QMainWindow):
         """Create quick actions section"""
         widget = QWidget()
         layout = QVBoxLayout(widget)
-        layout.setSpacing(16)
+        layout.setSpacing(12)
         layout.setContentsMargins(0, 0, 0, 0)
         
         # Section title
         title = QLabel("Quick Actions")
-        title.setStyleSheet("""
-            color: #111827;
-            font-size: 20px;
-            font-weight: 700;
-        """)
+        apply_section_title(title)
         layout.addWidget(title)
         
         # Action buttons
-        actions_layout = QHBoxLayout()
-        actions_layout.setSpacing(12)
+        actions_layout = QGridLayout()
+        actions_layout.setSpacing(10)
         
         actions = [
             ("New Product", self.handle_new_product),
@@ -395,12 +360,12 @@ class ERPDashboard(QMainWindow):
             ("Sync Data", self.handle_sync_data)
         ]
         
-        for action_text, handler in actions:
+        for idx, (action_text, handler) in enumerate(actions):
             btn = QuickActionButton(action_text)
+            btn.setMinimumWidth(180)
             btn.clicked.connect(handler)
-            actions_layout.addWidget(btn)
+            actions_layout.addWidget(btn, idx // 2, idx % 2)
         
-        actions_layout.addStretch()
         layout.addLayout(actions_layout)
         
         return widget
@@ -417,35 +382,20 @@ class ERPDashboard(QMainWindow):
         header_layout.setSpacing(12)
         
         title = QLabel("Alerts & Notifications")
-        title.setStyleSheet("""
-            color: #111827;
-            font-size: 20px;
-            font-weight: 700;
-        """)
+        apply_section_title(title)
         header_layout.addWidget(title)
         header_layout.addStretch()
         
         snooze_btn = QPushButton("Snooze")
         snooze_btn.setFixedHeight(32)
+        snooze_btn.setStyleSheet(SECONDARY_BUTTON_STYLE)
         snooze_btn.setMenu(self.build_snooze_menu())
         header_layout.addWidget(snooze_btn)
         self.snooze_menu_button = snooze_btn
         
         mark_btn = QPushButton("Mark All Read")
         mark_btn.setFixedHeight(32)
-        mark_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #E5E7EB;
-                color: #111827;
-                border: none;
-                border-radius: 6px;
-                padding: 6px 12px;
-                font-weight: 600;
-            }
-            QPushButton:hover {
-                background-color: #D1D5DB;
-            }
-        """)
+        mark_btn.setStyleSheet(SECONDARY_BUTTON_STYLE)
         mark_btn.clicked.connect(self.mark_all_notifications_read)
         header_layout.addWidget(mark_btn)
         
@@ -453,14 +403,7 @@ class ERPDashboard(QMainWindow):
         
         container = QFrame()
         container.setFrameShape(QFrame.Shape.StyledPanel)
-        container.setStyleSheet("""
-            QFrame {
-                background-color: white;
-                border: 1px solid #E5E7EB;
-                border-radius: 8px;
-                padding: 0px;
-            }
-        """)
+        container.setStyleSheet(CARD_STYLE)
         
         container_layout = QVBoxLayout(container)
         container_layout.setSpacing(0)
@@ -468,16 +411,7 @@ class ERPDashboard(QMainWindow):
         
         self.notification_list = QListWidget()
         self.notification_list.setObjectName("notificationList")
-        self.notification_list.setStyleSheet("""
-            QListWidget#notificationList {
-                border: none;
-                background-color: transparent;
-            }
-            QListWidget#notificationList::item {
-                padding: 12px 16px;
-                border-bottom: 1px solid #F3F4F6;
-            }
-        """)
+        self.notification_list.setStyleSheet(LIST_WIDGET_STYLE)
         self.notification_list.setWordWrap(True)
         container_layout.addWidget(self.notification_list)
         
@@ -506,43 +440,20 @@ class ERPDashboard(QMainWindow):
         
         # Section title
         title = QLabel("Recent Activity")
-        title.setStyleSheet("""
-            color: #111827;
-            font-size: 20px;
-            font-weight: 700;
-        """)
+        apply_section_title(title)
         layout.addWidget(title)
         
         # Activity list
         activity_frame = QFrame()
         activity_frame.setFrameShape(QFrame.Shape.StyledPanel)
-        activity_frame.setStyleSheet("""
-            QFrame {
-                background-color: white;
-                border: 1px solid #E5E7EB;
-                border-radius: 8px;
-                padding: 16px;
-            }
-        """)
+        activity_frame.setStyleSheet(CARD_STYLE)
         
         activity_layout = QVBoxLayout(activity_frame)
         activity_layout.setSpacing(8)
         activity_layout.setContentsMargins(16, 16, 16, 16)
         
         self.activity_list = QListWidget()
-        self.activity_list.setStyleSheet("""
-            QListWidget {
-                border: none;
-                background-color: transparent;
-            }
-            QListWidgetItem {
-                padding: 8px 0;
-                border-bottom: 1px solid #F3F4F6;
-            }
-            QListWidgetItem:last {
-                border-bottom: none;
-            }
-        """)
+        self.activity_list.setStyleSheet(LIST_WIDGET_STYLE)
         self.activity_list.setMaximumHeight(300)
         
         activity_layout.addWidget(self.activity_list)
@@ -705,8 +616,8 @@ class ERPDashboard(QMainWindow):
         title = data.get("title", "Alert")
         message = data.get("message", "")
         if timestamp_str:
-            return f"[{timestamp_str}] {title} — {message}"
-        return f"{title} — {message}"
+            return f"[{timestamp_str}] {title} - {message}"
+        return f"{title} - {message}"
     
     @staticmethod
     def _parse_timestamp(value) -> Optional[datetime]:
@@ -809,10 +720,16 @@ class ERPDashboard(QMainWindow):
     def show_dashboard_view(self):
         """Show dashboard view"""
         self.refresh_notification_preferences()
+        page_widget = QWidget()
+        page_layout = QVBoxLayout(page_widget)
+        page_layout.setSpacing(0)
+        page_layout.setContentsMargins(0, 0, 0, 0)
+
         content_widget = QWidget()
+        content_widget.setMaximumWidth(1320)
         content_layout = QVBoxLayout(content_widget)
-        content_layout.setSpacing(24)
-        content_layout.setContentsMargins(32, 32, 32, 32)
+        content_layout.setSpacing(22)
+        content_layout.setContentsMargins(28, 24, 28, 24)
         
         # Welcome section
         welcome_section = self.create_welcome_section()
@@ -835,8 +752,13 @@ class ERPDashboard(QMainWindow):
         content_layout.addWidget(activity_section)
         
         content_layout.addStretch()
-        
-        self.scroll_area.setWidget(content_widget)
+
+        page_layout.addWidget(
+            content_widget,
+            alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter,
+        )
+        page_layout.addStretch()
+        self.scroll_area.setWidget(page_widget)
     
     def show_staff_view(self):
         """Show staff management view"""
